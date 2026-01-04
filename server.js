@@ -15,10 +15,27 @@ app.use(express.json());
 
 // Initialize Firebase Admin SDK
 let serviceAccount;
+
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  // ƯU TIÊN: Nếu chạy trên Railway, sử dụng dữ liệu từ biến môi trường
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    console.log("✅ Firebase initialized via Environment Variable.");
+  } catch (e) {
+    console.error("❌ Lỗi định dạng JSON trong biến FIREBASE_SERVICE_ACCOUNT:", e.message);
+    console.error("Vui lòng kiểm tra lại nội dung biến môi trường trên Railway.");
+    process.exit(1); // Dừng server nếu JSON sai định dạng
+  }
 } else {
-  serviceAccount = require('./service-account.json');
+  // DỰ PHÒNG: Nếu chạy local, mới tìm file vật lý
+  try {
+    serviceAccount = require('./service-account.json');
+    console.log("✅ Firebase initialized via local service-account.json file.");
+  } catch (e) {
+    console.error("❌ Không tìm thấy file service-account.json và không có biến FIREBASE_SERVICE_ACCOUNT.");
+    console.error("Hãy tạo file service-account.json hoặc thiết lập biến môi trường.");
+    process.exit(1);
+  }
 }
 
 admin.initializeApp({
